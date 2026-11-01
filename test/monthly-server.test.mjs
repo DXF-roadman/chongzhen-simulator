@@ -1,0 +1,19 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import fs from 'node:fs/promises';
+import os from 'node:os';
+import path from 'node:path';
+import {spawn} from 'node:child_process';
+import {fileURLToPath,pathToFileURL} from 'node:url';
+const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..');
+test('模拟AI漏月拨字段仍按原旨绑定；月度清单、调整、读档及暂停实际生效',async()=>{
+ const dir=await fs.mkdtemp(path.join(os.tmpdir(),'chongzhen-monthly-')),origin='http://127.0.0.1:18641';await fs.writeFile(path.join(dir,'ai-config.json'),JSON.stringify({enabled:true,baseUrl:'https://monthly-test.invalid',model:'mock-monthly'}));
+ const child=spawn(process.execPath,['--import',pathToFileURL(path.join(root,'test/monthly-mock-ai.mjs')).href,'server.mjs'],{cwd:root,windowsHide:true,env:{...process.env,PORT:'18641',GAME_DATA_DIR:dir,DEEPSEEK_API_KEY:'monthly-test-key'},stdio:['ignore','ignore','pipe']});let errors='';child.stderr.on('data',d=>errors+=d);
+ try{let boot;for(let n=0;n<60;n++){try{boot=await fetch(origin+'/api/bootstrap').then(r=>r.json());break;}catch{await new Promise(r=>setTimeout(r,100));}}assert.ok(boot,errors);const post=async(route,b={})=>{const res=await fetch(origin+'/api/'+route,{method:'POST',headers:{'Content-Type':'application/json','X-App-Token':boot.token},body:JSON.stringify(b)});return {status:res.status,body:await res.json()};};
+  let r=await post('counsel',{text:'派袁崇焕去辽东整兵，每月拨5万两，压制边患',mode:'auto'});assert.equal(r.status,200,JSON.stringify(r.body));assert.equal(r.body.state.money,460);assert.equal(r.body.state.army,49);assert.equal(r.body.state.projects[0].monthly.money,5);assert.equal(r.body.forecast.entries.find(e=>e.group==='project').money,5);const id=r.body.state.projects[0].id;await post('save',{slot:1});r=await post('load',{slot:1});assert.equal(r.body.state.projects[0].monthly.money,5);
+  if(r.body.state.event)await post('event',{index:2});boot=await fetch(origin+'/api/bootstrap').then(r=>r.json());const quote=boot.forecast;r=await post('advance');assert.equal(r.status,200);assert.equal(r.body.state.ledger.entries.find(e=>e.id==='project:'+id).actualMoney,5);assert.equal(r.body.state.money,boot.state.money+quote.net);assert.ok(r.body.state.projects.length);
+  r=await post('counsel',{text:'将辽东督训月拨改为3万两',mode:'auto'});assert.equal(r.status,200,JSON.stringify(r.body));assert.equal(r.body.thread.messages.at(-1).commands[0].type,'monthly');assert.equal(r.body.state.projects[0].monthly.money,3);assert.equal(r.body.state.projects.length,1,'改预算不重建第二个工程');
+  r=await post('monthly',{command:{kind:'project',target:id,monthly:{money:0}}});assert.equal(r.status,200);const remaining=r.body.state.projects[0].remaining;await post('event',{index:2});r=await post('advance');assert.equal(r.body.state.projects[0].remaining,remaining);assert.equal(r.body.state.ledger.entries.find(e=>e.id==='project:'+id).paid,false);await post('save',{slot:2});r=await post('load',{slot:2});assert.equal(r.body.state.ledger.entries.find(e=>e.id==='project:'+id).paid,false);assert.ok(r.body.forecast.border.items.length);
+  const legacy=structuredClone(r.body.state);delete legacy.stateSchema;delete legacy.monthlyAuditVersion;legacy.edicts=[{title:'辽东整兵核饷',turn:0,input:'着袁崇焕以督师蓟辽衔赴任，边饷仍由户部按辽饷旧例调拨，本差概不拨银粮。'}];const money=legacy.money,expense=r.body.forecast.expenses;r=await post('import',{state:legacy});assert.equal(r.status,200,JSON.stringify(r.body));assert.equal(r.body.state.militaryState.units[0].commander,'yuan');assert.equal(r.body.state.money,money);assert.equal(r.body.forecast.expenses,expense);assert.equal(r.body.state.monthlyAuditVersion,1);await post('save',{slot:3});const history=r.body.state.history.length;r=await post('load',{slot:3});assert.equal(r.body.state.history.length,history,'读回升级后存档不重复核对');assert.equal(errors,'');
+ }finally{if(child.exitCode===null){child.kill();await new Promise(r=>child.once('exit',r));}await fs.rm(dir,{recursive:true,force:true});}
+});

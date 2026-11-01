@@ -1,0 +1,29 @@
+name: 问题反馈
+description: 反馈测试版中可复现的问题
+title: "[Bug] "
+body:
+  - type: input
+    id: version
+    attributes:
+      label: 游戏版本
+      placeholder: v0.1.0-alpha.1
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: 复现步骤
+      description: 请写明游戏月份、交谈对象、相关政令及点击顺序。勿填写 API Key。
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: 预期结果与实际结果
+    validations:
+      required: true
+  - type: textarea
+    id: attachments
+    attributes:
+      label: 截图或存档（可选）
+      description: 存档可能包含游戏对话，分享前请检查个人内容。

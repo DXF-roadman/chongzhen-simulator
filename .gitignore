@@ -1,0 +1,16 @@
+# Personal progress and credentials
+data/*
+!data/.gitkeep
+.env
+.env.*
+!.env.example
+*.log
+*.pid
+node_modules/
+backups/
+audits/
+runtime/
+dist/
+*.zip
+.DS_Store
+Thumbs.db

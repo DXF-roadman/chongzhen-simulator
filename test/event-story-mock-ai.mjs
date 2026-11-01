@@ -1,0 +1,3 @@
+import {firstReport} from './event-schedule-fixture.mjs';
+const actualFetch=globalThis.fetch;
+globalThis.fetch=async(url,o)=>{if(!String(url).startsWith('https://event-story-test.invalid/'))return actualFetch(url,o);if(o.headers.Authorization!=='Bearer event-story-test-only')throw Error('Unexpected test credential');const r=JSON.parse(o.body),context=JSON.parse(r.messages.at(-1).content);if(!context.completed.length)throw Error('Story must have actual new completed work');return new Response(JSON.stringify({choices:[{message:{content:JSON.stringify(firstReport)},finish_reason:'stop'}],usage:{total_tokens:100}}));};

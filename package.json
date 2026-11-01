@@ -1,0 +1,22 @@
+{
+  "name": "chongzhen-simulator",
+  "version": "0.1.0-alpha.1",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "node server.mjs",
+    "test": "node --test test/*.test.mjs"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "description": "天命·崇祯：由自然语言政令驱动的明末架空历史策略模拟器",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/DXF-roadman/chongzhen-simulator.git"
+  },
+  "bugs": {
+    "url": "https://github.com/DXF-roadman/chongzhen-simulator/issues"
+  },
+  "homepage": "https://github.com/DXF-roadman/chongzhen-simulator#readme"
+}

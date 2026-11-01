@@ -1,0 +1,11 @@
+Made with Natural Earth.
+Dataset: Natural Earth 1:110m land (physical land polygons; no political borders).
+Source: https://raw.githubusercontent.com/nvkelso/natural-earth-vector/master/geojson/ne_110m_land.geojson
+Maintainer repository: https://github.com/nvkelso/natural-earth-vector
+Official dataset: https://www.naturalearthdata.com/downloads/110m-physical-vectors/110m-land/
+License: Public domain. Natural Earth permits use, redistribution and modification for personal, educational and commercial purposes without permission or mandatory credit.
+Official terms: https://www.naturalearthdata.com/about/terms-of-use/
+Terms checked: 2026-10-24.
+
+Local processing: WGS84 longitude/latitude coordinates rounded to two decimal places; adjacent duplicate points removed. The Antarctic polygon is split at longitude zero to avoid a 360-degree edge across the map. Small interior sea holes are retained in the separate holes array. The 110m source is already generalized; no additional geometric simplification was required.
+Rendering: project each [longitude, latitude] point to your SVG coordinate system. Draw all polygons and holes as one compound path with fill-rule="evenodd", or subtract the holes. Every ring is closed. Do not use the coastline dataset as 1628 political borders.
